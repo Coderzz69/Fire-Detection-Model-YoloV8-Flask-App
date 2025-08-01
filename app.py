@@ -5,11 +5,24 @@ import io
 import base64
 import cv2
 import numpy as np
+import requests
+import os
 
 app = Flask(__name__)
 
-# Load your trained YOLOv8 model
-model = YOLO("fire_model.pt")  # Replace with your model path
+# Replace this with your actual SAS URL
+MODEL_URL = "https://firedetstorageaccc.blob.core.windows.net/models/fire_model.pt?sp=r&st=2025-08-01T16:27:05Z&se=2025-08-02T00:42:05Z&spr=https&sv=2024-11-04&sr=b&sig=vZ3WLLNbd0KsJU6ystZXasTlkY7S3t5WSEv%2B0fCgwSo%3D"
+MODEL_LOCAL_PATH = "fire_model.pt"
+
+def download_model_if_needed():
+    if not os.path.exists(MODEL_LOCAL_PATH):
+        print("Downloading model from Azure Blob...")
+        response = requests.get(MODEL_URL)
+        with open(MODEL_LOCAL_PATH, "wb") as f:
+            f.write(response.content)
+
+download_model_if_needed()
+model = YOLO(MODEL_LOCAL_PATH)
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -45,4 +58,5 @@ def predict():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 application = app
